@@ -965,6 +965,7 @@ void displayHomePage() {
             << bal << "\n================================\n";
 }
 
+#ifndef UNIT_TEST
 int main() {
   // 设置控制台为 UTF-8，确保中文不乱码
   SetConsoleOutputCP(CP_UTF8);
@@ -1006,3 +1007,4 @@ int main() {
   }
   return 0;
 }
+#endif // UNIT_TEST

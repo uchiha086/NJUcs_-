@@ -30,12 +30,16 @@ jobs:
             ctest --output-on-failure
           fi
         else
-          if compgen -G "code/*_test.cpp" > /dev/null; then
+          # If there are test files in either code/ or test/, compile and run each
+          if compgen -G "code/*_test.cpp" > /dev/null || compgen -G "test/*.cpp" > /dev/null; then
             mkdir -p build
-            for f in code/*_test.cpp; do
-              exe="build/$(basename "$f" .cpp)"
-              g++ -std=c++17 -O2 "$f" -o "$exe"
-              "$exe"
+            for f in code/*_test.cpp test/*.cpp; do
+              if [ -f "$f" ]; then
+                exe="build/$(basename "$f" .cpp)"
+                g++ -std=c++17 -O2 "$f" -o "$exe"
+                echo "Running $exe"
+                "$exe"
+              fi
             done
           elif compgen -G "code/*.cpp" > /dev/null; then
             mkdir -p build
@@ -47,7 +51,7 @@ jobs:
               exit 1
             fi
           else
-            echo "No C++ sources found in code/; skipping build"
+            echo "No C++ sources found in code/ or test/; skipping build"
             exit 0
           fi
         fi
