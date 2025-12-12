@@ -1,0 +1,66 @@
+@startuml
+' 
+class User {
+  - userId: String  // 用户ID
+  - userName: String  // 用户名
+  - password: String  // 密码
+  + login(): Bool //登入
+  + logout(): void //登出
+}
+
+class Category {
+  - categoryId: String  // 交易分类ID
+  - categoryName: String  // 交易分类名称
+  - categoryType: Enum  // 收入/支出
+  + getCategoryList(): List<Category> //获取分类
+  + addCategory(): Bool  // 添加交易分类
+  + deleteCategory(): Bool  // 删除交易分类
+}
+
+class Transaction {
+  - transactionId: String  // 交易ID
+  - amount: Double  // 交易金额
+  - transactionTime: Date  // 交易时间
+  - categoryId: String  // 关联交易分类ID
+  - remarks: String  // 交易备注
+  - transactionType: Enum  // 交易类型（收入/支出）
+  + addTransaction(t: Transaction): Bool  // 新增交易
+  + validateTransaction(t: Transaction): Bool  // 数据校验
+  + getTransactionDetail(): String //获取交易明细
+  + updateTransaction(): Bool //更新交易内容
+  + deleteTransaction(): Bool //删除交易
+}
+
+' 
+
+class StatisticService {
+  - totalIncome: Double  // 总收入
+  - totalExpense: Double  // 总支出
+  - balance: Double  // 收支结余
+  - statisticTimeRange: String  // 按时间查询
+  - categoryStatData: Map<Category, Double>  // 按金额
+  - amountRangeStatData: Map<String, Integer>  // 按次数
+  + calculateByType(): StatisticResult  // 按收支类型统计
+  + calculateByTime(g: Enum, r: Date[]): StatisticResult  // 按时间统计
+  + calculateByCategory(): StatisticResult  // 按分类统计
+  + calculateByAmountRange(): StatisticResult  // 按金额区间统计
+  + generateChartData(t: Enum): String  // 生成图表数据
+}
+
+class SearchService {
+  + searchTransaction(r: Date[], a: Double[], c: String, k: String): List<Transaction>  // 多条件查询
+}
+
+class UIService {
+  + getHomePageData(): Map  // 首页数据
+  + sortTransactionList(l: List<Transaction>, f: Enum, d: Enum): List<Transaction>  // 列表排序
+}
+
+' 
+User "1" -- "*" Transaction : 拥有（1个用户→多条交易）
+Category "1" -- "*" Transaction : 关联（1个分类→多条交易）
+StatisticService "1" -- "*" Transaction : 依赖（统计需交易数据）
+SearchService "1" -- "*" Transaction : 查询（获取交易记录）
+UIService "1" -- "*" Transaction : 展示（UI→交易列表）
+UIService "1" -- "1" StatisticService : 调用（UI→统计服务）
+@enduml

@@ -7,7 +7,9 @@
 #include <string>
 #include <utility>
 #include <vector>
+#if defined(_WIN32) || defined(_WIN64)
 #include <windows.h>
+#endif
 
 enum class TransactionType { Income, Expense };
 enum class TimeGroup { Daily, Monthly, Yearly };
@@ -433,9 +435,20 @@ class DataPersistence {
  public:
   static const char DB_FILE[];
   static const char DELIMITER = '|';
+  static std::string testFilePath;
+  // 在测试中可设置临时文件路径以进行真实 IO
+  static void setTestFilePath(const std::string& path) { testFilePath = path; }
+  static std::string getTestFilePath() { return testFilePath; }
 
   static bool saveAll() {
-    std::ofstream file(DB_FILE, std::ios::trunc);
+    // 选择文件路径：优先使用测试时设置的临时文件路径
+    const char* fileName = DB_FILE;
+    if (!testFilePath.empty()) fileName = testFilePath.c_str();
+  #ifdef UNIT_TEST
+    // 在单元测试模式下，若未设置测试文件路径则跳过实际写入
+    if (testFilePath.empty()) return true;
+  #endif
+    std::ofstream file(fileName, std::ios::trunc);
     if (!file.is_open()) return false;
 
     file << "[CATEGORIES]\n";
@@ -457,7 +470,9 @@ class DataPersistence {
   }
 
   static bool loadAll() {
-    std::ifstream file(DB_FILE);
+    const char* fileName = DB_FILE;
+    if (!testFilePath.empty()) fileName = testFilePath.c_str();
+    std::ifstream file(fileName);
     if (!file.is_open()) return false;
 
     std::string line, section;
@@ -566,10 +581,22 @@ class DataPersistence {
 
 const char DataPersistence::DB_FILE[] = "bookkeeping.db";
 
+// 测试时使用的临时文件路径（若为空则按原行为）
+std::string DataPersistence::testFilePath = "";
+
 bool Transaction::addTransaction(const Transaction& t) {
+  // 验证基本合法性
   if (!validateTransaction(t)) return false;
+
+  // 检查是否已有相同 id 的记录，若有则拒绝添加
+  for (size_t i = 0; i < repository.size(); ++i) {
+    if (repository[i].transactionId == t.transactionId) {
+      return false;
+    }
+  }
+
+  // 添加到仓库
   repository.push_back(t);
-  DataPersistence::saveAll();
   return true;
 }
 
@@ -957,6 +984,8 @@ void displayHomePage() {
             << bal << "\n================================\n";
 }
 
+// 当进行单元测试时，避免编译程序的主循环以便测试框架提供自己的 `main`
+#ifndef UNIT_TEST
 int main() {
   // 设置控制台为 UTF-8，确保中文不乱码
   SetConsoleOutputCP(CP_UTF8);
@@ -996,5 +1025,11 @@ int main() {
       break;
     }
   }
+  DataPersistence::saveAll();
+      std::cout << "再见！\n";
+      break;
+    }
+  }
   return 0;
 }
+#endif
