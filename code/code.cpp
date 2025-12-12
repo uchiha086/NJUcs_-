@@ -10,7 +10,9 @@
 #ifdef _WIN32
 #include <windows.h>
 #else
-// 在非 Windows 平台上提供空实现以避免编译错误
+// 在非 Windows 平台上提供最小兼容定义以避免编译错误
+// 定义 UTF-8 常量（Windows 中 CP_UTF8 = 65001）和空函数签名
+constexpr unsigned int CP_UTF8 = 65001;
 inline void SetConsoleOutputCP(unsigned int) {}
 inline void SetConsoleCP(unsigned int) {}
 #endif
