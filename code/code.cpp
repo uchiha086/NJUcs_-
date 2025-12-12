@@ -9,6 +9,12 @@
 #include <vector>
 #if defined(_WIN32) || defined(_WIN64)
 #include <windows.h>
+#else
+// 在非 Windows 平台上提供最小兼容定义以避免编译错误
+// 定义 UTF-8 常量（Windows 中 CP_UTF8 = 65001）和空函数签名
+constexpr unsigned int CP_UTF8 = 65001;
+inline void SetConsoleOutputCP(unsigned int) {}
+inline void SetConsoleCP(unsigned int) {}
 #endif
 
 enum class TransactionType { Income, Expense };
@@ -1026,10 +1032,6 @@ int main() {
     }
   }
   DataPersistence::saveAll();
-      std::cout << "再见！\n";
-      break;
-    }
-  }
   return 0;
 }
 #endif

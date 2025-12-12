@@ -42,8 +42,9 @@ jobs:
                 echo "Compiling $f -> $exe"
                 case "$f" in
                   test/*)
-                    # Tests under test/ use GoogleTest and need to link against it
-                    g++ -std=c++17 -O2 "$f" -o "$exe" -lgtest -lgtest_main -pthread
+                    # Tests under test/ use GoogleTest and include production code.
+                    # Define UNIT_TEST so that code.cpp's main is excluded.
+                    g++ -DUNIT_TEST -std=c++17 -O2 "$f" -o "$exe" -lgtest -lgtest_main -pthread
                     ;;
                   *)
                     # code/*_test.cpp are standalone tests
