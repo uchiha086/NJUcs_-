@@ -7,7 +7,13 @@
 #include <string>
 #include <utility>
 #include <vector>
+#ifdef _WIN32
 #include <windows.h>
+#else
+// 在非 Windows 平台上提供空实现以避免编译错误
+inline void SetConsoleOutputCP(unsigned int) {}
+inline void SetConsoleCP(unsigned int) {}
+#endif
 
 enum class TransactionType { Income, Expense };
 enum class TimeGroup { Daily, Monthly, Yearly };
