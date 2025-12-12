@@ -1,0 +1,53 @@
+name: C++ Project CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install build tools
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential cmake
+
+    - name: Build and run tests
+      run: |
+        set -e
+        if [ -f CMakeLists.txt ]; then
+          mkdir -p build
+          cd build
+          cmake ..
+          cmake --build . --config Release
+          if command -v ctest >/dev/null 2>&1; then
+            ctest --output-on-failure
+          fi
+        else
+          if compgen -G "code/*_test.cpp" > /dev/null; then
+            mkdir -p build
+            for f in code/*_test.cpp; do
+              exe="build/$(basename "$f" .cpp)"
+              g++ -std=c++17 -O2 "$f" -o "$exe"
+              "$exe"
+            done
+          elif compgen -G "code/*.cpp" > /dev/null; then
+            mkdir -p build
+            g++ -std=c++17 -O2 code/*.cpp -o build/run
+            if [ -x build/run ]; then
+              ./build/run
+            else
+              echo "No runnable produced"
+              exit 1
+            fi
+          else
+            echo "No C++ sources found in code/; skipping build"
+            exit 0
+          fi
+        fi
